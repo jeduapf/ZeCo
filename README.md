@@ -309,7 +309,7 @@ Once running, your API will have:
 - `PUT /api/v1/products/{id}` - Update product
 - `DELETE /api/v1/products/{id}` - Delete product
 
-## 🏃 Running the Application
+## 🏃 Running the Application Locally
 
 ```bash
 # Install dependencies
@@ -322,12 +322,41 @@ uvicorn main:app --reload
 # http://localhost:8000/docs
 ```
 
+## 🏃 Running the Application with Docker
+
+```bash
+docker build -t backend_api .
+
+docker run --rm -p 8000:8000 backend_api
+```
+
+OR just click in the bat file which contains the following inside
+
+```bash
+@echo off
+SET IMAGE_NAME=backend_api
+SET PORT=8000
+
+echo Building Docker image...
+docker build -t %IMAGE_NAME% .
+
+IF %ERRORLEVEL% NEQ 0 (
+    echo Docker build failed. Exiting.
+    exit /b 1
+)
+
+echo Running Docker container...
+docker run --rm -p %PORT%:%PORT% %IMAGE_NAME%
+
+pause
+```
+
 ## 🔒 Security Notes
 
 - Change `SECRET_KEY` in production
 - Use environment variables for sensitive data
-- Consider using PostgreSQL in production
-- Add rate limiting for production
+- Consider using PostgreSQL in production if the place is too big
+- Add rate limiting for production 
 - Implement proper CORS settings
 - Add input validation
 - Use HTTPS in production
