@@ -56,28 +56,31 @@ project_root/
 
 ### `config.py`
 ```python
-import os
 from dotenv import load_dotenv
+import os
+from typing import Final # So that my variables are immutable
 
-load_dotenv()
+# Load environment variables from .env file
+load_dotenv(dotenv_path=".env")
 
-# Database
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
+# Database configuration
+DATABASE_URL: Final[str] = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
 
-# Security
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-TOKEN_REFRESH_THRESHOLD_MINUTES = 5
-
-# Debug
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+# JWT configuration
+SECRET_KEY: Final[str] = os.getenv("SECRET_KEY", "your-secret-key-here")  # Change in production!
+ALGORITHM: Final[str] = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES: Final[int] = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+TOKEN_REFRESH_THRESHOLD_MINUTES: Final[int] = int(os.getenv("TOKEN_REFRESH_THRESHOLD_MINUTES", "15"))
+DEBUG: Final[bool] = os.getenv("DEBUG", "False").lower() in ("true", "1", "t", "True", "TRUE")  # Convert to boolean
 ```
 
 ### `.env`
 ```env
-DATABASE_URL=sqlite:///./app.db
-SECRET_KEY=your-super-secret-key-change-this-in-production
+DATABASE_URL=sqlite:///./DATABASE.db
+SECRET_KEY=sexysecret
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+TOKEN_REFRESH_THRESHOLD_MINUTES = 15
 DEBUG=True
 ```
 
@@ -91,6 +94,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 python-dotenv==1.0.0
 pydantic==2.5.0
+bcrypt==3.2.2
 ```
 
 ## 📝 __init__.py Files
