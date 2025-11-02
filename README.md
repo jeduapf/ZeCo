@@ -52,6 +52,96 @@ project_root/
     └── test_products.py
 ```
 
+## 🧩 Database Schema (ER Diagram)
+
+Below is the complete **Entity–Relationship Diagram** showing how users, orders, and items connect — including analytical extensions like costs, promotions, and inventory logs.
+
+```mermaid
+erDiagram
+    USERS {
+        int id PK
+        string username
+        string hashed_password
+        string email
+        int age 
+        bool gender
+        string role
+        int table_id FK
+    }
+
+    TABLES {
+        int id PK
+        int number
+        int capacity
+        string status
+        string location_zone
+        datetime reservation_start
+    }
+
+    ITEMS {
+        int id PK
+        string name
+        int stock
+        float price
+        float base_cost
+        float tax_rate
+        string category
+        boolean available
+        datetime last_updated
+    }
+
+    ORDERS {
+        int id PK
+        int user_id FK
+        int table_id FK
+        string status
+        datetime created_at
+        datetime finished_at
+        string specifications
+        float total_amount
+        float discount_applied
+        string payment_method
+        string promo_code FK
+    }
+
+    ORDER_ITEMS {
+        int order_id FK
+        int item_id FK
+        int quantity
+        float item_price
+        float item_cost
+    }
+
+    PROMOTIONS {
+        int id PK
+        string code
+        string description
+        float discount_percentage
+        string target_category
+        datetime start_date
+        datetime end_date
+    }
+
+    INVENTORY_LOGS {
+        int id PK
+        int item_id FK
+        datetime timestamp
+        int stock_change
+        string reason
+    }
+
+    USERS ||--o{ ORDERS : "places"
+    TABLES ||--o{ USERS : "assigned to"
+    TABLES ||--o{ ORDERS : "serves"
+    ORDERS ||--|{ ORDER_ITEMS : "contains"
+    ITEMS ||--|{ ORDER_ITEMS : "part of"
+    PROMOTIONS ||--o{ ORDERS : "applied to"
+    ITEMS ||--o{ INVENTORY_LOGS : "tracked by"
+```
+
+---
+
+
 ## 🔧 Configuration Files
 
 ### `config.py`
