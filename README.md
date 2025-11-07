@@ -58,6 +58,8 @@ Below is the complete **Entity–Relationship Diagram** showing how users, order
 
 ```mermaid
 erDiagram
+erDiagram
+    %% === USERS ===
     USERS {
         int id PK
         string username UK
@@ -69,6 +71,7 @@ erDiagram
         int table_id FK "nullable"
     }
 
+    %% === TABLES ===
     TABLES {
         int id PK
         int number UK "physical table number"
@@ -78,36 +81,40 @@ erDiagram
         datetime reservation_start "nullable"
     }
 
+    %% === BASIC ITEMS ===
     BASIC_ITEMS {
         int id PK
         string name
-        float stock "current quantity"
+        float stock
         string unit "kg, liters, pieces"
-        float base_cost "cost per unit"
-        float tax_rate "0.0 to 1.0"
+        float base_cost
+        float tax_rate
         datetime expiration_date
         datetime last_updated
         int last_updated_by FK
         text description "nullable"
     }
 
+    %% === MENU ITEMS ===
     MENU_ITEMS {
         int id PK
-        string name UK "dish name"
-        float price "customer price"
-        int stock "estimated servings"
+        string name UK
+        float price
+        int stock
         enum category "entry, main_course, dessert, beverage"
-        bool available "can be ordered"
+        bool available
         datetime created_at
         text description "nullable"
     }
 
+    %% === MENU ITEM COMPONENTS ===
     MENU_ITEM_COMPONENTS {
         int menu_item_id PK,FK
         int basic_item_id PK,FK
-        float quantity_required "amount needed per serving (unit in basic_items)"
+        float quantity_required
     }
 
+    %% === ORDERS ===
     ORDERS {
         int id PK
         int user_id FK "nullable for guest orders"
@@ -115,62 +122,108 @@ erDiagram
         enum status "pending, confirmed, preparing, ready, served, completed, cancelled"
         datetime created_at
         datetime finished_at "nullable"
-        text specifications "nullable - special requests"
+        text specifications "nullable"
         float total_amount
         float discount_applied
         enum payment_method "cash, card, mobile, voucher, pending"
         string promo_code FK "nullable"
+        int num_customers "number of people for this order"
     }
 
+    %% === ORDER ITEMS ===
     ORDER_ITEMS {
         int order_id PK,FK
         int item_id PK,FK
         int quantity
-        float item_price "price snapshot at order time"
-        float item_cost "cost snapshot for profit calculation"
+        float item_price
+        float item_cost
     }
 
+    %% === PROMOTIONS ===
     PROMOTIONS {
         int id PK
-        string code UK "promo code customers enter"
+        string code UK
         text description
-        float discount_percentage "0.0 to 1.0"
-        enum target_category "nullable - if applies to specific category"
-        int target_menu_item "nullable - if applies to specific item"
+        float discount_percentage
+        enum target_category "nullable"
+        int target_menu_item "nullable"
         datetime start_date
         datetime end_date
     }
 
+    %% === INVENTORY LOGS ===
     INVENTORY_LOGS {
         int id PK
         int user_id FK
-        int item_id FK "references basic_items"
+        int item_id FK
         datetime timestamp
-        float stock_change "positive or negative"
+        float stock_change
         enum reason "initial_stock, restock, sale, waste, theft, correction, return, sample"
-        string notes "nullable - additional context"
+        string notes "nullable"
     }
 
-    %% Core Relationships
+    %% === STAFF SHIFTS ===
+    STAFF_SHIFTS {
+        int id PK
+        int user_id FK
+        datetime shift_start
+        datetime shift_end
+        enum role "waiter, kitchen"
+    }
+
+    %% === DAILY LOGS ===
+    DAILY_LOGS {
+        int id PK
+        date log_date UK
+        int total_customers
+        float total_revenue
+        float total_expenses
+        float worked_time
+    }
+
+    %% === MONTHLY OVERVIEW ===
+    MONTHLY_OVERVIEW {
+        int id PK
+        date month_start "e.g., 2025-11-01"
+        string category "revenue, food_cost, staff_cost, electricity, rent, taxes, etc."
+        float amount "positive for income, negative for expense"
+        text notes "optional"
+    }
+
+    %% === MONTHLY ITEM STATS ===
+    MONTHLY_ITEM_STATS {
+        int id PK
+        int menu_item_id FK
+        date month_start
+        int quantity_sold
+        float revenue_generated
+        float total_item_cost
+        float avg_margin
+    }
+
+    %% === RELATIONSHIPS ===
     USERS ||--o{ ORDERS : "places/manages"
     TABLES ||--o{ USERS : "seats"
     TABLES ||--o{ ORDERS : "serves at"
-    
-    %% Order Structure
+
     ORDERS ||--|{ ORDER_ITEMS : "contains"
     MENU_ITEMS ||--o{ ORDER_ITEMS : "ordered as"
-    
-    %% Menu Composition (Recipe)
+
     MENU_ITEMS ||--|{ MENU_ITEM_COMPONENTS : "composed of"
     BASIC_ITEMS ||--o{ MENU_ITEM_COMPONENTS : "ingredient in"
-    
-    %% Inventory Management
+
     USERS ||--o{ BASIC_ITEMS : "last updated by"
     USERS ||--o{ INVENTORY_LOGS : "performs change"
     BASIC_ITEMS ||--o{ INVENTORY_LOGS : "tracked in"
-    
-    %% Promotions
+
     PROMOTIONS ||--o{ ORDERS : "applied to"
+
+    DAILY_LOGS ||--o{ STAFF_SHIFTS : "includes staff shifts"
+    DAILY_LOGS ||--o{ ORDERS : "summarizes orders of the day"
+
+    MONTHLY_ITEM_STATS ||--|| MENU_ITEMS : "analyzes"
+    MONTHLY_ITEM_STATS ||--|| MONTHLY_OVERVIEW : "belongs to month"
+    DAILY_LOGS ||--o{ MONTHLY_OVERVIEW : "aggregated into"
 ```
 
 ---
@@ -201,7 +254,7 @@ DEBUG: Final[bool] = os.getenv("DEBUG", "False").lower() in ("true", "1", "t", "
 ### `.env`
 ```env
 DATABASE_URL=sqlite:///./DATABASE.db
-SECRET_KEY=sexysecret
+SECRET_KEY=secret
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 TOKEN_REFRESH_THRESHOLD_MINUTES = 15
@@ -219,180 +272,6 @@ python-multipart==0.0.6
 python-dotenv==1.0.0
 pydantic==2.5.0
 bcrypt==3.2.2
-```
-
-## 📝 __init__.py Files
-
-### `database/__init__.py`
-```python
-from database.base import Base
-from database.session import engine, SessionLocal, get_db
-from database.models.user import User, UserRole
-from database.models.product import Product
-
-__all__ = [
-    'Base', 'engine', 'SessionLocal', 'get_db',
-    'User', 'UserRole', 'Product'
-]
-```
-
-### `database/models/__init__.py`
-```python
-from database.models.user import User, UserRole
-from database.models.product import Product
-
-__all__ = ['User', 'UserRole', 'Product']
-```
-
-### `schemas/__init__.py`
-```python
-from schemas.user import (
-    UserBase, UserCreate, UserResponse, 
-    UserRoleUpdate, Token, TokenData
-)
-from schemas.product import (
-    ProductBase, ProductCreate, ProductUpdate,
-    ProductResponse, ProductListResponse
-)
-
-__all__ = [
-    'UserBase', 'UserCreate', 'UserResponse',
-    'UserRoleUpdate', 'Token', 'TokenData',
-    'ProductBase', 'ProductCreate', 'ProductUpdate',
-    'ProductResponse', 'ProductListResponse'
-]
-```
-
-### `services/__init__.py`
-```python
-from services.product_service import ProductService
-
-__all__ = ['ProductService']
-```
-
-### `api/v1/endpoints/__init__.py`
-```python
-from api.v1.endpoints import auth, users, products
-
-__all__ = ['auth', 'users', 'products']
-```
-
-### `core/__init__.py`
-```python
-from core.security import (
-    verify_password, get_password_hash,
-    create_access_token, get_current_user,
-    get_current_admin_user
-)
-from core.dependencies import DbDependency, CurrentUser, AdminUser
-
-__all__ = [
-    'verify_password', 'get_password_hash',
-    'create_access_token', 'get_current_user',
-    'get_current_admin_user', 'DbDependency',
-    'CurrentUser', 'AdminUser'
-]
-```
-
-## 🚀 How to Add New Features
-
-### Adding a New Model (e.g., Order)
-
-1. **Create model**: `database/models/order.py`
-```python
-from sqlalchemy import Column, Integer, ForeignKey, DateTime, Enum
-from sqlalchemy.orm import relationship
-from datetime import datetime
-from database.base import Base
-from enum import Enum as PyEnum
-
-class OrderStatus(PyEnum):
-    PENDING = "pending"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-
-class Order(Base):
-    __tablename__ = "orders"
-    
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    product_id = Column(Integer, ForeignKey("products.id"))
-    quantity = Column(Integer)
-    status = Column(Enum(OrderStatus), default=OrderStatus.PENDING)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    user = relationship("User")
-    product = relationship("Product")
-```
-
-2. **Update**: `database/base.py` - add import
-```python
-from database.models.order import Order
-```
-
-3. **Create schemas**: `schemas/order.py`
-```python
-from pydantic import BaseModel
-from datetime import datetime
-
-class OrderCreate(BaseModel):
-    product_id: int
-    quantity: int
-
-class OrderResponse(BaseModel):
-    id: int
-    user_id: int
-    product_id: int
-    quantity: int
-    status: str
-    created_at: datetime
-    
-    class Config:
-        from_attributes = True
-```
-
-4. **Create service**: `services/order_service.py`
-```python
-from sqlalchemy.orm import Session
-from database.models.order import Order
-from schemas.order import OrderCreate
-
-class OrderService:
-    @staticmethod
-    def create_order(db: Session, order: OrderCreate, user_id: int):
-        new_order = Order(
-            user_id=user_id,
-            product_id=order.product_id,
-            quantity=order.quantity
-        )
-        db.add(new_order)
-        db.commit()
-        db.refresh(new_order)
-        return new_order
-```
-
-5. **Create endpoints**: `api/v1/endpoints/orders.py`
-```python
-from fastapi import APIRouter
-from core.dependencies import DbDependency, CurrentUser
-from schemas.order import OrderCreate, OrderResponse
-from services.order_service import OrderService
-
-router = APIRouter(tags=["Orders"])
-
-@router.post("/", response_model=OrderResponse)
-async def create_order(
-    order: OrderCreate,
-    current_user: CurrentUser,
-    db: DbDependency
-):
-    return OrderService.create_order(db, order, current_user.id)
-```
-
-6. **Register router**: `api/v1/router.py`
-```python
-from api.v1.endpoints import orders
-api_router.include_router(orders.router, prefix="/orders")
 ```
 
 ## 🎯 Key Benefits of This Structure
