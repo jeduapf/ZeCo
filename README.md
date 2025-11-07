@@ -58,7 +58,6 @@ Below is the complete **Entity–Relationship Diagram** showing how users, order
 
 ```mermaid
 erDiagram
-erDiagram
     %% === USERS ===
     USERS {
         int id PK
