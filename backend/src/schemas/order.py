@@ -5,7 +5,7 @@ Complete schemas for the order lifecycle from creation to payment
 from pydantic import BaseModel, Field, field_validator
 from database.models.order import OrderStatus, PaymentMethod
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # === OrderItem Schemas ===
@@ -304,7 +304,7 @@ class OrderStatusUpdate(BaseModel):
     )
     old_status: Optional[OrderStatus] = None
     new_status: OrderStatus
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     affected_items: List[str] = Field(default_factory=list)
     notify_roles: List[str] = Field(
         default_factory=list,
@@ -321,7 +321,7 @@ class TableOrderUpdate(BaseModel):
     order_id: Optional[int] = None
     current_bill_total: float
     active_orders_count: int
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # === Validation Schemas ===

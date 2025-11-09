@@ -5,7 +5,7 @@ Complete schemas for all user-related operations.
 """
 
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field, EmailStr, field_validator
 from core.i18n_logger import get_i18n_logger
 from config import LANG
@@ -322,7 +322,7 @@ class UserStatusUpdate(BaseModel):
         description="Event type: clock_in, clock_out, table_assigned, table_cleared"
     )
     table_id: Optional[int] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Optional[dict] = None
     
     model_config = {"from_attributes": True}

@@ -4,7 +4,7 @@ Table Pydantic schemas for API requests/responses
 from pydantic import BaseModel, Field, field_validator
 from database.models.table import TableStatus, LocationZone
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # === Base Schemas ===
@@ -47,7 +47,7 @@ class TableReservation(BaseModel):
     @classmethod
     def validate_future_time(cls, v: datetime) -> datetime:
         """Ensure reservation is in the future"""
-        if v <= datetime.utcnow():
+        if v <= datetime.now(timezone.utc):
             raise ValueError("Reservation time must be in the future")
         return v
 
@@ -149,7 +149,7 @@ class TableStatusUpdate(BaseModel):
     new_status: Optional[TableStatus] = None
     seated_count: int = 0
     current_bill: float = 0.0
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Optional[dict] = None
 
 

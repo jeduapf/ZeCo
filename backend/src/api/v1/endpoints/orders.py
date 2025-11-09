@@ -1,13 +1,13 @@
 """
 Order management endpoints with async support and WebSocket notifications
 """
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
 from typing import List, Optional
 from datetime import datetime, timezone
 
-from core.dependencies import get_current_user, get_current_admin_user, get_db
+from core.dependencies import get_current_user, get_db, DbDependency, StaffUser, CurrentUser
 from database.models.user import User, UserRole
 from database.models.order import Order, OrderStatus, PaymentMethod
 from database.models.order_item import OrderItem
@@ -34,8 +34,8 @@ router = APIRouter(tags=["Orders"])
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=OrderDetailedResponse)
 async def create_order(
     order_data: OrderCreate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: CurrentUser,
+    db: DbDependency
 ):
     """
     Create a new order.
@@ -178,8 +178,8 @@ async def create_order(
 @router.get("/{order_id}", response_model=OrderDetailedResponse)
 async def get_order(
     order_id: int,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: CurrentUser,
+    db: DbDependency
 ):
     """
     Get details of a specific order.
@@ -236,8 +236,8 @@ async def get_order(
 
 @router.get("/", response_model=OrderListResponse)
 async def list_orders(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    db: DbDependency,
+    current_user: CurrentUser,
     status_filter: Optional[OrderStatus] = None,
     table_id: Optional[int] = None,
     page: int = Query(1, ge=1),
@@ -297,8 +297,8 @@ async def list_orders(
 async def update_order_status(
     order_id: int,
     status_update: OrderUpdateStatus,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: StaffUser,
+    db: DbDependency
 ):
     """
     Update order status (kitchen/waiter workflow).
@@ -381,7 +381,7 @@ async def update_order_status(
                 "new_status": new_status.value,
                 "updated_by": current_user.username
             },
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         },
         [UserRole.KITCHEN, UserRole.WAITER, UserRole.ADMIN]
     )
@@ -391,8 +391,8 @@ async def update_order_status(
 
 @router.get("/kitchen/dashboard", response_model=KitchenDashboard)
 async def get_kitchen_dashboard(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    current_user: StaffUser,
+    db: DbDependency
 ):
     """
     Get kitchen dashboard with all active orders organized by status.
@@ -453,7 +453,7 @@ async def get_kitchen_dashboard(
             "status": order.status,
             "created_at": order.created_at,
             "time_elapsed_minutes": int((datetime.now(timezone.utc) - order.created_at).total_seconds() / 60),
-            "priority": "urgent" if (datetime.now(timezone.utc) - order.created_at).total_seconds() > 1800 else "normal",
+            "priority": "urgent" if (datetime.now(timezone.utc) - order.created_at).total_seconds() > 900 else "normal",
             "specifications": order.specifications
         }
         

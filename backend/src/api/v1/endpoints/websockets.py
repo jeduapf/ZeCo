@@ -2,11 +2,11 @@
 WebSocket endpoints for real-time updates
 """
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import logging
+from datetime import datetime, timezone
 
 from core.websocket_manager import manager
 from core.dependencies import get_db
@@ -14,7 +14,6 @@ from database.models.user import User
 from config import SECRET_KEY, ALGORITHM
 
 router = APIRouter(tags=["WebSocket"])
-security = HTTPBearer()
 logger = logging.getLogger(__name__)
 
 
@@ -114,7 +113,7 @@ async def websocket_endpoint(
                     await manager.send_personal_message(
                         {
                             "type": "pong",
-                            "timestamp": datetime.utcnow().isoformat()
+                            "timestamp": datetime.now(timezone.utc).isoformat()
                         },
                         websocket
                     )
@@ -127,7 +126,7 @@ async def websocket_endpoint(
                             {
                                 "type": "stats",
                                 "data": stats,
-                                "timestamp": datetime.utcnow().isoformat()
+                                "timestamp": datetime.now(timezone.utc).isoformat()
                             },
                             websocket
                         )
@@ -140,7 +139,7 @@ async def websocket_endpoint(
                             {
                                 "type": "connected_users",
                                 "data": {"users": users},
-                                "timestamp": datetime.utcnow().isoformat()
+                                "timestamp": datetime.now(timezone.utc).isoformat()
                             },
                             websocket
                         )
@@ -151,7 +150,7 @@ async def websocket_endpoint(
                         {
                             "type": "error",
                             "message": f"Unknown action: {action}",
-                            "timestamp": datetime.utcnow().isoformat()
+                            "timestamp": datetime.now(timezone.utc).isoformat()
                         },
                         websocket
                     )
@@ -165,7 +164,7 @@ async def websocket_endpoint(
                     {
                         "type": "error",
                         "message": "Error processing your request",
-                        "timestamp": datetime.utcnow().isoformat()
+                        "timestamp": datetime.now(timezone.utc).isoformat()
                     },
                     websocket
                 )
@@ -177,7 +176,7 @@ async def websocket_endpoint(
             await websocket.send_json({
                 "type": "error",
                 "message": "Authentication failed or connection error",
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             })
         except:
             pass
@@ -192,6 +191,3 @@ async def websocket_endpoint(
         # Clean up connection
         if user:
             manager.disconnect(websocket)
-
-
-from datetime import datetime

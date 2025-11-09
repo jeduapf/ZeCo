@@ -4,7 +4,7 @@ MenuItem and BasicItem Pydantic schemas for API requests/responses
 from pydantic import BaseModel, Field, field_validator
 from database.models.menu_item import Category
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # === BasicItem Schemas ===
@@ -27,7 +27,7 @@ class BasicItemCreate(BasicItemBase):
     @classmethod
     def validate_expiration_future(cls, v: datetime) -> datetime:
         """Warn if expiration date is in the past"""
-        if v < datetime.utcnow():
+        if v < datetime.now(timezone.utc):
             # Allow past dates but could log a warning
             pass
         return v
@@ -214,7 +214,7 @@ class PublicMenu(BaseModel):
     """Complete customer-facing menu"""
     categories: List[PublicMenuCategory]
     restaurant_name: str = "Restaurant"
-    last_updated: datetime = Field(default_factory=datetime.utcnow)
+    last_updated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 # === Inventory Management Schemas ===
@@ -262,7 +262,7 @@ class MenuItemAvailabilityUpdate(BaseModel):
     event_type: str = Field(..., description="stock_updated, became_available, became_unavailable")
     new_stock: int
     is_available: bool
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class InventoryUpdate(BaseModel):
@@ -273,4 +273,4 @@ class InventoryUpdate(BaseModel):
     current_stock: float
     unit: str
     affected_menu_items: List[str] = []
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

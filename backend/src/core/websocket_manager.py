@@ -3,9 +3,9 @@ WebSocket Connection Manager for Real-Time Updates
 Handles connections from waiters, kitchen staff, and admin dashboards
 """
 from fastapi import WebSocket, WebSocketDisconnect
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Optional
 from database.models.user import UserRole
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import asyncio
 import logging
@@ -80,7 +80,7 @@ class ConnectionManager:
             'user_id': user_id,
             'username': username,
             'role': user_role,
-            'connected_at': datetime.utcnow().isoformat()
+            'connected_at': datetime.now(timezone.utc).isoformat()
         }
         
         logger.info(
@@ -94,7 +94,7 @@ class ConnectionManager:
                 "type": "connection_established",
                 "message": f"Welcome {username}! You're connected to real-time updates.",
                 "role": user_role.value,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             },
             websocket
         )
@@ -311,7 +311,7 @@ async def notify_order_created(order_data: dict):
     message = {
         "type": "order_created",
         "data": order_data,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     await manager.broadcast_to_roles(
         message,
@@ -324,7 +324,7 @@ async def notify_order_ready(order_data: dict):
     message = {
         "type": "order_ready",
         "data": order_data,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     await manager.broadcast_to_roles(
         message,
@@ -337,7 +337,7 @@ async def notify_table_status_change(table_data: dict):
     message = {
         "type": "table_status_changed",
         "data": table_data,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     await manager.broadcast_to_roles(
         message,
@@ -350,7 +350,7 @@ async def notify_inventory_alert(alert_data: dict):
     message = {
         "type": "inventory_alert",
         "data": alert_data,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     await manager.broadcast_to_roles(
         message,
@@ -363,6 +363,6 @@ async def notify_user_action(user_id: int, action_data: dict):
     message = {
         "type": "action_result",
         "data": action_data,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }
     await manager.send_to_user(message, user_id)
