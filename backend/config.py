@@ -16,3 +16,4 @@ TOKEN_REFRESH_THRESHOLD_MINUTES: Final[int] = int(os.getenv("TOKEN_REFRESH_THRES
 DEBUG: Final[bool] = os.getenv("DEBUG", "False").lower() in ("true", "1", "t", "True", "TRUE")  # Convert to boolean
 LANG: Final[str] = os.getenv("LANG", "en")  # Default language for logging
 MIN_STOCK: Final[int] = int(os.getenv("MIN_STOCK", "5"))  # Minimum stock level for menu items
+API_VERSION: Final[str] = os.getenv("API_VERSION", "v1")  # API version

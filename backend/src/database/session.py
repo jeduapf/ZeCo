@@ -1,32 +1,57 @@
 """
-Database session management
+Asynchronous database session management for FastAPI
+Using SQLite with aiosqlite backend and WAL mode enabled
 """
-from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlalchemy import event
 from config import DATABASE_URL
 
-# Create database engine
-engine = create_engine(
+
+# --- Create async database engine ---
+engine = create_async_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+    echo=False,
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {},
+    future=True
 )
 
-# Enable WAL and other performance PRAGMAs automatically for SQLite so that they help with concurrency and speed
-@event.listens_for(engine, "connect")
+# --- Enable performance PRAGMAs for SQLite ---
+@event.listens_for(engine.sync_engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
+    """Enable WAL, foreign keys, and reasonable performance options"""
     cursor = dbapi_connection.cursor()
-    cursor.execute("PRAGMA journal_mode=WAL;")       # Enables write-ahead logging
-    cursor.execute("PRAGMA synchronous = NORMAL;")    # Faster commits, still safe
-    cursor.execute("PRAGMA foreign_keys = ON;")       # Enforce FK constraints
+    cursor.execute("PRAGMA journal_mode=WAL;")     # Enables write-ahead logging (better concurrency)
+    cursor.execute("PRAGMA synchronous = NORMAL;")  # Faster commits, still durable
+    cursor.execute("PRAGMA foreign_keys = ON;")     # Enforce FK constraints
     cursor.close()
 
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# --- Create async session factory ---
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    autoflush=False,
+    autocommit=False,
+    expire_on_commit=False,
+)
 
-def get_db():
-    """Dependency to get database session"""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# --- Dependency for FastAPI endpoints ---
+async def get_db():
+    """
+    Provides a new async database session per request.
+    Closes it automatically when the request is done.
+    """
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()
+            
+# Example usage in FastAPI endpoints:
+'''
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from database.sessions import get_db
+async def some_endpoint(db: AsyncSession = Depends(get_db)):
+    result = await db.execute(some_query)
+    ...
+'''

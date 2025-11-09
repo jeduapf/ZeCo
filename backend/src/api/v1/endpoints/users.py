@@ -6,9 +6,10 @@ from core.dependencies import DbDependency, AdminUser
 from database.models.user import User, UserRole
 from schemas.user import UserResponse, UserRoleUpdate
 
+
 router = APIRouter(tags=["User Management"])
 
-@router.get("/", response_model=list[UserResponse])
+@router.get("/", response_model=list[UserResponse], status_code=status.HTTP_200_OK)
 async def get_all_users(
     admin: AdminUser,
     db: DbDependency,

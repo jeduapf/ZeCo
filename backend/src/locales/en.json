@@ -89,5 +89,33 @@
   "error.validation": "Validation error: {field} - {message}",
   "error.database": "Database error: {error}",
   "error.not_found": "{resource} not found: {identifier}",
-  "error.permission": "Permission denied: User '{username}' attempted to {action}"
+  "error.permission": "Permission denied: User '{username}' attempted to {action}",
+
+  "_comment": "Add these new keys to your existing en.json file",
+  
+  "staff_shift.clocked_in": "Staff member '{username}' clocked in for {role} shift",
+  "staff_shift.clocked_out": "Staff member '{username}' clocked out after {duration} as {role}",
+  "staff_shift.already_ended": "Shift #{shift_id} for '{username}' has already ended",
+  "staff_shift.still_active": "Shift #{shift_id} for '{username}' is still active",
+  
+  "daily_log.generating": "Generating daily log for {date}",
+  "daily_log.created": "Daily log created for {date} - {customers} customers, {revenue} revenue",
+  "daily_log.updated": "Daily log updated for {date} - {customers} customers, {revenue} revenue",
+  "daily_log.generation_complete": "Daily log generation complete for {date}",
+  
+  "monthly_overview.entry_added": "Monthly financial entry added: {category} for {month} - {amount} ({type})",
+  "monthly_overview.date_corrected": "Month start date corrected from {provided} to {corrected}",
+  
+  "monthly_item_stats.generating": "Generating monthly item statistics for {month} (item: {item_id})",
+  "monthly_item_stats.generation_complete": "Monthly item stats generation complete for {month} - {created} created, {updated} updated",
+  "monthly_item_stats.unusual_margin": "Unusual profit margin detected: {margin}",
+  
+  "permissions.check_failed": "Permission check failed for user '{username}' - attempted {operation} on {model}",
+  "permissions.granted": "Permission granted to '{username}' for {operation} on {model}",
+  
+  "analytics.report_generated": "Analytics report generated: {report_type} for period {period}",
+  "analytics.no_data": "No data available for analytics report: {report_type} for period {period}"
+
+
+
 }

@@ -7,6 +7,7 @@ import json
 from enum import StrEnum
 from typing import Dict, Any, Optional
 from pathlib import Path
+from config import LANG
 
 
 class LogLevel(StrEnum):

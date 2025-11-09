@@ -8,6 +8,7 @@ from database.base import Base
 from enum import StrEnum
 from typing import Optional
 
+# TODO: logger missing here?
 
 class StockChangeReason(StrEnum):
     """Why stock changed - crucial for inventory analysis and identifying problems"""
@@ -218,7 +219,3 @@ class InventoryLog(Base):
             f"{sign}{self.stock_change:.2f} - "
             f"{self.reason.value}>"
         )
-
-
-# Import timedelta for helper methods
-from datetime import timedelta

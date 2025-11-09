@@ -1,5 +1,5 @@
 """
-Order database model
+Order database model (UPDATED with num_customers field)
 Manages customer orders from creation to completion
 """
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Enum as SQLAlchemyEnum
@@ -67,6 +67,13 @@ class Order(Base):
         default=PaymentMethod.PENDING
     )
     
+    # NEW FIELD: Track number of customers this order serves
+    num_customers = Column(
+        Integer,
+        nullable=True,
+        default=1
+    )  # How many people are eating from this order
+    
     # Promotional tracking
     promo_code = Column(String(50), ForeignKey("promotions.code"), nullable=True)
     
@@ -86,5 +93,20 @@ class Order(Base):
         self.total_amount = subtotal - self.discount_applied
         return self.total_amount
     
+    def calculate_per_person_cost(self) -> float:
+        """
+        Calculate the average cost per person for this order.
+        
+        Useful for analyzing spending patterns and comparing table sizes.
+        
+        Returns:
+            Average cost per customer
+        """
+        if not self.num_customers or self.num_customers == 0:
+            return self.total_amount
+        
+        return self.total_amount / self.num_customers
+    
     def __repr__(self):
-        return f"<Order {self.id} - Table {self.table_id} - {self.status.value}>"
+        customer_info = f" ({self.num_customers} people)" if self.num_customers else ""
+        return f"<Order {self.id} - Table {self.table_id}{customer_info} - {self.status.value}>"

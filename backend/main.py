@@ -3,13 +3,9 @@ FastAPI Application Entry Point
 """
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
-from database.base import Base
-from database.session import engine
-from api.v1.router import api_router
-from core.logging import setup_logging, LogLevel
+from src import Base, engine, api_router, SlidingTokenMiddleware
+from config import TOKEN_REFRESH_THRESHOLD_MINUTES, API_VERSION
 
-# Setup logging
-setup_logging(level=LogLevel.INFO)
 
 # Initialize FastAPI application
 app = FastAPI(
@@ -35,8 +31,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add sliding token middleware
+app.add_middleware(
+    SlidingTokenMiddleware,
+    threshold_minutes=TOKEN_REFRESH_THRESHOLD_MINUTES  # Refresh if less than configured minutes remain
+)
+
 # Include API v1 router
-app.include_router(api_router, prefix="/api/v1")
+app.include_router(api_router, prefix=f"/api/{API_VERSION}")
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
