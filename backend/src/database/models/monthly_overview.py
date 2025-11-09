@@ -5,10 +5,10 @@ Monthly financial tracking for P&L statements and budget management
 from sqlalchemy import Column, Integer, Float, Date, String, Text, UniqueConstraint
 from sqlalchemy.orm import validates
 from datetime import date, timedelta
-from database.base import Base
+from src.database.base import Base
 from enum import StrEnum
 from typing import List, Dict, Optional
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 logger = get_i18n_logger("monthly_overview_model")

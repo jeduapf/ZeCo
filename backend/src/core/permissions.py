@@ -7,8 +7,8 @@ from typing import Callable, List, Optional
 import asyncio
 from fastapi import HTTPException, status
 
-from database.models.user import User, UserRole
-from core.i18n_logger import get_i18n_logger
+from src.database.models.user import User, UserRole
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 logger = get_i18n_logger("permissions")

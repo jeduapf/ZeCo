@@ -5,9 +5,9 @@ Menu item performance analytics for data-driven menu optimization
 from sqlalchemy import Column, Integer, Float, Date, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, validates
 from datetime import date
-from database.base import Base
+from src.database.base import Base
 from typing import List, Dict, Optional
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 logger = get_i18n_logger("monthly_item_stats_model")

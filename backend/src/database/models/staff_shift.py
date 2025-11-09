@@ -5,10 +5,10 @@ Admin-only access for shift management and payroll calculations
 from sqlalchemy import Column, Integer, DateTime, ForeignKey, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship, validates
 from datetime import datetime, timezone, timedelta
-from database.base import Base
+from src.database.base import Base
 from enum import StrEnum
 from typing import Optional
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 logger = get_i18n_logger("staff_shift_model")

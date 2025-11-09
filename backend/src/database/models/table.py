@@ -4,10 +4,10 @@ Table database model with i18n logging integration
 from sqlalchemy import Column, Integer, String, DateTime, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship, validates
 from datetime import datetime, timezone
-from database.base import Base
+from src.database.base import Base
 from enum import StrEnum
 from typing import List, Optional
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 # Initialize logger for this module

@@ -2,7 +2,7 @@
 Table Pydantic schemas for API requests/responses
 """
 from pydantic import BaseModel, Field, field_validator
-from database.models.table import TableStatus, LocationZone
+from src.database.models.table import TableStatus, LocationZone
 from typing import Optional, List
 from datetime import datetime, timezone
 

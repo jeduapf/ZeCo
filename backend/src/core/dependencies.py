@@ -18,9 +18,9 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.session import get_db
-from database.models.user import User
-from core.security import (
+from src.database.session import get_db
+from src.database.models.user import User
+from src.core.security import (
     get_current_user,
     get_current_admin_user,
     get_current_staff_user,

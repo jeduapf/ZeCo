@@ -1,3 +1,5 @@
-from api.v1.endpoints import auth, users, products
-
-__all__ = ['auth', 'users', 'products']
+from .auth import *
+from .users import *
+from .websockets import *
+from .orders import *
+from .products import *

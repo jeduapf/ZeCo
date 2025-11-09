@@ -8,9 +8,9 @@ from sqlalchemy import select
 import logging
 from datetime import datetime, timezone
 
-from core.websocket_manager import manager
-from core.dependencies import get_db
-from database.models.user import User
+from src.core.websocket_manager import manager
+from src.core.dependencies import get_db
+from src.database.models.user import User
 from config import SECRET_KEY, ALGORITHM
 
 router = APIRouter(tags=["WebSocket"])

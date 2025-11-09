@@ -3,7 +3,7 @@ OrderItem junction table - Links orders to menu items with quantity and pricing 
 """
 from sqlalchemy import Column, Integer, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, validates
-from database.base import Base
+from src.database.base import Base
 
 
 class OrderItem(Base):

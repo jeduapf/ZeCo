@@ -3,8 +3,8 @@ MenuItemComponent junction table with i18n logging integration
 """
 from sqlalchemy import Column, Integer, Float, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship, validates
-from database.base import Base
-from core.i18n_logger import get_i18n_logger
+from src.database.base import Base
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 # Initialize logger for this module

@@ -5,10 +5,10 @@ Manages discount codes and promotional campaigns
 from sqlalchemy import Column, Integer, String, Float, DateTime, Text, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship, validates
 from datetime import datetime, timezone
-from database.base import Base
-from core.i18n_logger import get_i18n_logger
+from src.database.base import Base
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
-from database.models.menu_item import Category
+from src.database.models.menu_item import Category
 
 logger = get_i18n_logger("promotion_logger")
 
@@ -52,7 +52,7 @@ class Promotion(Base):
         """Ensure discount is between 0 and 1 (0% to 100%)"""
         if not 0 <= value <= 1:
             logger.error(
-                "database.value.error", 
+                "src.database.value.error", 
                 language=LANG,  
                 value=value, 
                 reason="0 <= value <= 1"
@@ -65,7 +65,7 @@ class Promotion(Base):
         """Ensure end date is after start date"""
         if hasattr(self, 'start_date') and self.start_date and end_date <= self.start_date:
             logger.error(
-                "database.enddate.error", 
+                "src.database.enddate.error", 
                 language=LANG,  
                 value=end_date,
             )

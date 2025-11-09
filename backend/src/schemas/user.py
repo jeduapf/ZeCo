@@ -7,9 +7,11 @@ Complete schemas for all user-related operations.
 from typing import Optional, List
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field, EmailStr, field_validator
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
-from database.models.user import UserRole
+from src.database.models.user import UserRole
+from enum import StrEnum
+
 
 
 # --- i18n logger setup ---
@@ -34,13 +36,19 @@ class AdminAccessMixin:
 
 
 # === Base Schemas ===
+class GenderEnum(StrEnum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
+
+
 
 class UserBase(BaseModel):
     """Base user schema with common fields shared across all user schemas."""
     username: str = Field(..., min_length=3, max_length=50, description="Username for login")
     email: EmailStr = Field(..., description="User email address")
     age: int = Field(..., ge=0, le=150, description="User age")
-    gender: Optional[bool] = Field(
+    gender: Optional[GenderEnum] = Field(
         None, 
         description="Gender (True=Male, False=Female, None=Other/Prefer not to say)"
     )
@@ -60,7 +68,9 @@ class UserBase(BaseModel):
             raise ValueError("Age must be between 0 and 150")
         return value
 
-
+    class Config:
+        orm_mode = True
+        
 # === Creation Schemas ===
 
 class UserCreate(UserBase):
@@ -131,13 +141,9 @@ class UserCreate(UserBase):
         return v
 
 
-class UserRegister(BaseModel):
+class UserRegister(UserBase):
     """Simplified schema for public user registration (always creates CLIENT role)."""
-    username: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr
     password: str = Field(..., min_length=8)
-    age: int = Field(..., ge=0, le=150)
-    gender: Optional[bool] = None
     
     @field_validator('password')
     @classmethod
@@ -163,7 +169,7 @@ class UserUpdate(BaseModel):
     """Schema for updating user information (all fields optional for partial updates)."""
     email: Optional[EmailStr] = None
     age: Optional[int] = Field(None, ge=0, le=150)
-    gender: Optional[bool] = None
+    gender: Optional[GenderEnum] = None
     table_id: Optional[int] = None
 
 
@@ -202,6 +208,17 @@ class UserTableAssignment(BaseModel):
 
 # === Response Schemas ===
 
+class UserRegisterResponse(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50, description="Username for login")
+    email: EmailStr = Field(..., description="User email address")
+    age: int = Field(..., ge=0, le=150, description="User age")
+    role:UserRole
+    
+    class Config:
+        orm_mode = True
+
+
+
 class UserResponse(UserBase):
     """Schema for user response (excludes sensitive data like password)."""
     id: int
@@ -217,6 +234,7 @@ class UserResponse(UserBase):
     )
     
     model_config = {"from_attributes": True}
+    
 
 
 class UserDetailedResponse(UserResponse):

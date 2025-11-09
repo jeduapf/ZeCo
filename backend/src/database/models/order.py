@@ -5,7 +5,7 @@ Manages customer orders from creation to completion
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from database.base import Base
+from src.database.base import Base
 from enum import StrEnum
 
 

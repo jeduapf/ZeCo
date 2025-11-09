@@ -13,8 +13,8 @@ from config import (
     SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, 
     TOKEN_REFRESH_THRESHOLD_MINUTES, DEBUG
 )
-from database.session import get_db
-from database.models.user import User, UserRole
+from src.database.session import get_db
+from src.database.models.user import User, UserRole
 
 if not SECRET_KEY or not ALGORITHM:
     raise RuntimeError("SECRET_KEY and ALGORITHM must be set in environment variables")

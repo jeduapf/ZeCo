@@ -3,7 +3,7 @@ Order Pydantic schemas for API requests/responses
 Complete schemas for the order lifecycle from creation to payment
 """
 from pydantic import BaseModel, Field, field_validator
-from database.models.order import OrderStatus, PaymentMethod
+from src.database.models.order import OrderStatus, PaymentMethod
 from typing import Optional, List
 from datetime import datetime, timezone
 

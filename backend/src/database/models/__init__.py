@@ -2,21 +2,21 @@
 Database models package initialization (COMPLETE UPDATE)
 Centralized imports for all database models
 """
-from database.models.user import User, UserRole
-from database.models.basic_item import BasicItem
-from database.models.menu_item import MenuItem, Category
-from database.models.menu_item_component import MenuItemComponent
-from database.models.table import Table, TableStatus, LocationZone
-from database.models.order import Order, OrderStatus, PaymentMethod
-from database.models.order_item import OrderItem
-from database.models.promotion import Promotion
-from database.models.inventory_log import InventoryLog, StockChangeReason
+from src.database.models.user import User, UserRole
+from src.database.models.basic_item import BasicItem
+from src.database.models.menu_item import MenuItem, Category
+from src.database.models.menu_item_component import MenuItemComponent
+from src.database.models.table import Table, TableStatus, LocationZone
+from src.database.models.order import Order, OrderStatus, PaymentMethod
+from src.database.models.order_item import OrderItem
+from src.database.models.promotion import Promotion
+from src.database.models.inventory_log import InventoryLog, StockChangeReason
 
 # NEW MODELS:
-from database.models.staff_shift import StaffShift, ShiftRole
-from database.models.daily_log import DailyLog
-from database.models.monthly_overview import MonthlyOverview, FinancialCategory
-from database.models.monthly_item_stats import MonthlyItemStats
+from src.database.models.staff_shift import StaffShift, ShiftRole
+from src.database.models.daily_log import DailyLog
+from src.database.models.monthly_overview import MonthlyOverview, FinancialCategory
+from src.database.models.monthly_item_stats import MonthlyItemStats
 
 __all__ = [
     # User and Authentication

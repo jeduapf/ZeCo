@@ -4,9 +4,9 @@ BasicItem database model with i18n logging integration
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship, validates
 from datetime import datetime, timezone, timedelta
-from database.base import Base
+from src.database.base import Base
 from typing import Optional
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 # Initialize logger for this module
@@ -136,7 +136,7 @@ class BasicItem(Base):
             db_session: Active database session
             notes: Optional additional information
         """
-        from database.models.inventory_log import InventoryLog, StockChangeReason
+        from src.database.models.inventory_log import InventoryLog, StockChangeReason
         
         old_stock = self.stock
         self.stock += amount
@@ -228,7 +228,7 @@ class BasicItem(Base):
         """Ensure tax rate is between 0 and 1 (0% to 100%)"""
         if not 0 <= value <= 1:
             logger.error(
-                "database.value.error",
+                "src.database.value.error",
                 language=LANG,
                 value=value,
                 reason="0 <= tax_rate <= 1"

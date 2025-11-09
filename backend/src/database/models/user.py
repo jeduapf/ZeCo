@@ -1,15 +1,15 @@
 """
 User database model with i18n logging integration (UPDATED with staff_shifts relationship)
 """
-from database.base import Base
-from database.models.order import Order, OrderStatus
-from database.models.staff_shift import StaffShift
+from src.database.base import Base
+from src.database.models.order import Order, OrderStatus
+from src.database.models.staff_shift import StaffShift
 from datetime import date
 from sqlalchemy import Column, Integer, String, ForeignKey, Enum as SQLAlchemyEnum, Boolean
 from sqlalchemy.orm import relationship, validates
 from enum import StrEnum
 from typing import List
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 # Initialize logger for this module

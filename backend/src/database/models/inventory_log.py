@@ -4,7 +4,7 @@ Inventory Log model - Complete audit trail for all stock changes
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from database.base import Base
+from src.database.base import Base
 from enum import StrEnum
 from typing import Optional
 

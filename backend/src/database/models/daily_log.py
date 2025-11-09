@@ -5,9 +5,9 @@ Daily business summary for high-level operational insights
 from sqlalchemy import Column, Integer, Float, Date, Text
 from sqlalchemy.orm import validates
 from datetime import date, datetime, timezone, timedelta
-from database.base import Base
+from src.database.base import Base
 from typing import List, Dict, Optional
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 from config import LANG
 
 logger = get_i18n_logger("daily_log_model")
@@ -188,8 +188,8 @@ class DailyLog(Base):
         Returns:
             The created or updated DailyLog
         """
-        from database.models.order import Order, OrderStatus
-        from database.models.staff_shift import StaffShift
+        from src.database.models.order import Order, OrderStatus
+        from src.database.models.staff_shift import StaffShift
         
         logger.info(
             "daily_log.generating",

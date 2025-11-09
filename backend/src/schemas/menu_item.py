@@ -2,7 +2,7 @@
 MenuItem and BasicItem Pydantic schemas for API requests/responses
 """
 from pydantic import BaseModel, Field, field_validator
-from database.models.menu_item import Category
+from src.database.models.menu_item import Category
 from typing import Optional, List
 from datetime import datetime, timezone
 

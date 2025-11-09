@@ -8,8 +8,8 @@ from fastapi import Response
 from datetime import datetime, timedelta, timezone
 
 from config import ACCESS_TOKEN_EXPIRE_MINUTES, DEBUG, TOKEN_REFRESH_THRESHOLD_MINUTES
-from core.security import create_access_token, decode_token
-from database.models.user import User
+from src.core.security import create_access_token, decode_token
+from src.database.models.user import User
 
 
 class TokenRefreshManager:

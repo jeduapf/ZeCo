@@ -40,8 +40,15 @@ app.add_middleware(
 # Include API v1 router
 app.include_router(api_router, prefix=f"/api/{API_VERSION}")
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+async def init_db():
+    async with engine.begin() as conn:
+        # create tables
+        await conn.run_sync(Base.metadata.create_all)
+
+# Run DB init on startup
+@app.on_event("startup")
+async def on_startup():
+    await init_db()
 
 @app.get("/", status_code=status.HTTP_200_OK)
 async def root():

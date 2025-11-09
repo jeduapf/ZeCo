@@ -4,10 +4,8 @@ Handles connections from waiters, kitchen staff, and admin dashboards
 """
 from fastapi import WebSocket, WebSocketDisconnect
 from typing import Dict, List, Set, Optional
-from database.models.user import UserRole
+from src.database.models.user import UserRole
 from datetime import datetime, timezone
-import json
-import asyncio
 import logging
 
 logger = logging.getLogger(__name__)

@@ -4,9 +4,9 @@ This demonstrates how to use the ModelPermissions system in service methods
 """
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from database.models.staff_shift import StaffShift, ShiftRole
-from database.models.user import User
-from core.permissions import require_admin, require_read, require_write
+from src.database.models.staff_shift import StaffShift, ShiftRole
+from src.database.models.user import User
+from src.core.permissions import require_admin, require_read, require_write
 from datetime import datetime, timezone, date
 from typing import List, Optional
 

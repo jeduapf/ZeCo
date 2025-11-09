@@ -4,11 +4,11 @@ MenuItem database model with i18n logging integration
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, Text, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship, validates
 from datetime import datetime, timezone
-from database.base import Base
+from src.database.base import Base
 from enum import StrEnum
 from config import MIN_STOCK, LANG
 from typing import Optional, List
-from core.i18n_logger import get_i18n_logger
+from src.core.i18n_logger import get_i18n_logger
 
 # Initialize logger for this module
 logger = get_i18n_logger("menu_item_model")
@@ -70,6 +70,7 @@ class MenuItem(Base):
         cascade="all, delete-orphan"
     )
     order_items = relationship("OrderItem", back_populates="item")
+    monthly_stats = relationship("MonthlyItemStats", back_populates="menu_item")
     
     # === Helper Methods ===
     

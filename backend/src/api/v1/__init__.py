@@ -1,2 +1,2 @@
-from endpoints import *
-from router import *
+from .endpoints import *
+from .router import *
