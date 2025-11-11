@@ -17,3 +17,7 @@ DEBUG: Final[bool] = os.getenv("DEBUG", "False").lower() in ("true", "1", "t", "
 LANG: Final[str] = os.getenv("LANG", "en")  # Default language for logging
 MIN_STOCK: Final[int] = int(os.getenv("MIN_STOCK", "5"))  # Minimum stock level for menu items
 API_VERSION: Final[str] = os.getenv("API_VERSION", "v1")  # API version
+if DEBUG:
+    LOGLEVEL: Final[str] = "DEBUG"
+else:
+    LOGLEVEL: Final[str] = os.getenv("LOGLEVEL", "INFO")  # Log base levels to be printed       

@@ -15,6 +15,14 @@ from config import (
 )
 from src.database.session import get_db
 from src.database.models.user import User, UserRole
+from src.schemas.user import LoginResponse, UserPublicResponse
+from src.core.i18n_logger import get_i18n_logger
+from config import LANG
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
 
 if not SECRET_KEY or not ALGORITHM:
     raise RuntimeError("SECRET_KEY and ALGORITHM must be set in environment variables")
@@ -23,6 +31,7 @@ if not SECRET_KEY or not ALGORITHM:
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
+logger = get_i18n_logger(__name__)
 
 # === Password Utilities ===
 
@@ -192,36 +201,50 @@ def should_refresh_token(token: str) -> bool:
 
 # === Authentication Dependencies ===
 
+def get_token_remaining_minutes(payload: dict) -> float:
+    """
+    Returns the remaining time of a JWT token in minutes.
+    """
+    exp_timestamp = payload.get("exp")
+    if exp_timestamp is None:
+        return 0.0
+    
+    exp_datetime = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
+    remaining = exp_datetime - datetime.now(timezone.utc)
+    
+    # Return remaining time in minutes
+    return remaining.total_seconds() / 60
+
+
+def get_token_remaining_duration(token: str) -> timedelta:
+    """
+    Get the remaining duration for a token as a timedelta object.
+    Used for token refresh to maintain the original session time.
+    """
+    try:
+        payload = decode_token(token)
+        exp_timestamp = payload.get("exp")
+        
+        if exp_timestamp is None:
+            return timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        
+        exp_datetime = datetime.fromtimestamp(exp_timestamp, tz=timezone.utc)
+        remaining = exp_datetime - datetime.now(timezone.utc)
+        
+        # Return remaining duration, but ensure it's at least 1 minute
+        return max(remaining, timedelta(minutes=1))
+    
+    except (JWTError, ExpiredSignatureError):
+        return timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
+
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[AsyncSession, Depends(get_db)],
-    response: Optional[Response] = None
+    response: Response
 ) -> User:
     """
     Get current authenticated user from JWT token (ASYNC VERSION).
-    
-    This is the main authentication dependency. Use it in your endpoints like:
-    
-    @router.get("/protected")
-    async def protected_route(current_user: User = Depends(get_current_user)):
-        return {"user": current_user.username}
-    
-    Features:
-    - Validates JWT token
-    - Fetches user from database
-    - Auto-refreshes token if needed
-    - Returns SQLAlchemy User model (NOT Pydantic schema)
-    
-    Args:
-        token: JWT token from Authorization header
-        db: Async database session
-        response: Optional Response object for setting refresh token header
-        
-    Returns:
-        User model from database
-        
-    Raises:
-        HTTPException 401: If token is invalid or expired
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -260,13 +283,28 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     
-    # Auto-refresh token if needed
-    if response is not None and should_refresh_token(token):
-        new_token = create_access_token(data={"sub": user.username})
-        response.headers["X-New-Token"] = new_token
-        
-        if DEBUG:
-            print(f"Token auto-refreshed for user: {user.username}")
+    # Auto-refresh if needed - FIX: Use remaining duration from original token
+    if should_refresh_token(token):
+        # Get the remaining duration from the original token
+        remaining_duration = get_token_remaining_duration(token)
+        # Create new token with the SAME remaining duration
+        new_access_token = create_access_token(
+            data={"sub": user.username}, 
+            expires_delta=remaining_duration
+        )
+        response.headers["X-New-Token"] = new_access_token
+        logger.info(
+            "auth.token.refreshed",
+            language=LANG,
+            username=user.username
+        )
+
+    logger.debug(
+        "security.token.time",
+        language=LANG,
+        username= user.username,
+        time= round(get_token_remaining_minutes(payload), 2)
+    )
     
     return user
 
@@ -296,10 +334,13 @@ async def get_current_admin_user(
     Raises:
         HTTPException 403: If user is not an admin
     """
-    if DEBUG:
-        print(f"Admin check - User: {current_user.username}, Role: {current_user.role.value}")
-    
+
     if current_user.role != UserRole.ADMIN:
+        logger.warning(
+            "auth.unauthorized.access",
+            language=LANG,
+            username=current_user.username
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This operation requires administrator privileges"
@@ -341,7 +382,7 @@ async def get_current_staff_user(
     """
     Verify current user is any type of staff member.
     
-    Use this when an endpoint should be accessible to any staff
+    Use when an endpoint should be accessible to any staff
     (admin, kitchen, waiter) but not clients.
     
     Args:
@@ -354,6 +395,11 @@ async def get_current_staff_user(
         HTTPException 403: If user is not staff
     """
     if not current_user.is_staff():
+        logger.warning(
+            "auth.unauthorized.access",
+            language=LANG,
+            username=current_user.username
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This operation requires staff privileges"
@@ -380,6 +426,11 @@ async def get_current_kitchen_user(
         HTTPException 403: If user is not kitchen or admin
     """
     if current_user.role not in (UserRole.KITCHEN, UserRole.ADMIN):
+        logger.warning(
+            "auth.unauthorized.access",
+            language=LANG,
+            username=current_user.username
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This operation requires kitchen staff privileges"
@@ -406,6 +457,11 @@ async def get_current_waiter_user(
         HTTPException 403: If user is not waiter or admin
     """
     if current_user.role not in (UserRole.WAITER, UserRole.ADMIN):
+        logger.warning(
+            "auth.unauthorized.access",
+            language=LANG,
+            username=current_user.username
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="This operation requires waiter privileges"

@@ -1,10 +1,10 @@
-"""
-User management endpoints (Admin only)
-"""
+# """
+# User management endpoints (Admin only)
+# """
 from fastapi import APIRouter, HTTPException, status, Response
-from src.core.dependencies import DbDependency, AdminUser
-from src.database.models.user import User, UserRole
-from src.schemas.user import UserResponse, UserRoleUpdate
+# from src.core.dependencies import DbDependency, AdminUser
+# from src.database.models.user import User, UserRole
+# from src.schemas.user import UserResponse, UserRoleUpdate
 
 
 router = APIRouter(tags=["User Management"])

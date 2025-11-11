@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pydantic import BaseModel, Field, EmailStr, field_validator
 from src.core.i18n_logger import get_i18n_logger
 from config import LANG
-from src.database.models.user import UserRole
+from src.database.models.user import UserRole, GenderEnum
 from enum import StrEnum
 
 
@@ -36,11 +36,6 @@ class AdminAccessMixin:
 
 
 # === Base Schemas ===
-class GenderEnum(StrEnum):
-    MALE = "male"
-    FEMALE = "female"
-    OTHER = "other"
-
 
 
 class UserBase(BaseModel):
@@ -68,8 +63,8 @@ class UserBase(BaseModel):
             raise ValueError("Age must be between 0 and 150")
         return value
 
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
+
         
 # === Creation Schemas ===
 
@@ -214,16 +209,13 @@ class UserRegisterResponse(BaseModel):
     age: int = Field(..., ge=0, le=150, description="User age")
     role:UserRole
     
-    class Config:
-        orm_mode = True
+    model_config = {"from_attributes": True}
 
 
-
-class UserResponse(UserBase):
+class UserStaffResponse(UserBase):
     """Schema for user response (excludes sensitive data like password)."""
     id: int
     role: UserRole
-    table_id: Optional[int] = None
     is_currently_working: bool = Field(
         default=False, 
         description="Whether staff member is currently clocked in"
@@ -236,8 +228,7 @@ class UserResponse(UserBase):
     model_config = {"from_attributes": True}
     
 
-
-class UserDetailedResponse(UserResponse):
+class UserStaffDetailedResponse(UserStaffResponse):
     """Detailed user response with additional computed fields for dashboards."""
     total_orders: int = Field(default=0, description="Total number of orders placed")
     active_orders_count: int = Field(default=0, description="Number of active orders")
@@ -247,9 +238,10 @@ class UserDetailedResponse(UserResponse):
     )
 
 
-class UserPublic(BaseModel):
+class UserPublicResponse(BaseModel):
     """Public version of a user (minimal exposure for client-facing contexts)."""
     username: str
+    id: int
     role: UserRole
     table_id: Optional[int] = None
     
@@ -258,7 +250,7 @@ class UserPublic(BaseModel):
 
 class UserListResponse(BaseModel):
     """Paginated list of users for list endpoints."""
-    users: List[UserResponse]
+    users: List[UserPublicResponse]
     total: int
     page: int
     page_size: int
@@ -271,7 +263,7 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int = Field(..., description="Token expiration time in seconds")
-    user: UserResponse
+    user: UserPublicResponse
 
 
 class TokenData(BaseModel):
@@ -292,7 +284,7 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     expires_in: int
-    user: UserResponse
+    user: UserPublicResponse
 
 
 # === Staff-Specific Schemas ===
@@ -320,7 +312,7 @@ class StaffShiftSummary(BaseModel):
 
 class UserWorkHistory(BaseModel):
     """Complete work history for a staff member including current and past shifts."""
-    user: UserResponse
+    user: UserPublicResponse
     current_shift: Optional[StaffShiftSummary]
     recent_shifts: List[StaffShiftSummary]
     monthly_summary: dict = Field(

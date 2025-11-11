@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Token Test - FastAPI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .token-info {
+            background: #e7f3ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            word-wrap: break-word;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 JWT Token Management Test</h1>
+        
+        <div id="auth-section">
+            <h3>Login</h3>
+            <input type="text" id="username" placeholder="Username" value="testuser">
+            <input type="password" id="password" placeholder="Password" value="password">
+            <button onclick="login()">Login</button>
+        </div>
+
+        <div id="token-section" style="display: none;">
+            <h3>Token Status</h3>
+            <div id="token-info" class="token-info"></div>
+            
+            <div>
+                <button onclick="getUserInfo()">Get User Info</button>
+                <button onclick="testTokenRefresh()">Test Token Refresh</button>
+                <button onclick="refreshToken()">Force Refresh Token</button>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div id="console">
+            <h3>Console Log</h3>
+            <div id="log" class="log"></div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script src="/static/token-manager.js"></script>
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type;
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${timestamp}] ${message}`);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                log('Please enter username and password', 'error');
+                return;
+            }
+
+            try {
+                log('Attempting login...');
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username,
+                        password
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    tokenManager.setToken(data.access_token);
+                    log('✅ Login successful!', 'success');
+                    showTokenSection();
+                } else {
+                    const error = await response.json();
+                    log(`❌ Login failed: ${error.detail}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Login error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getUserInfo() {
+            try {
+                log('Fetching user info...');
+                const user = await getCurrentUser();
+                log(`✅ User info: ${JSON.stringify(user, null, 2)}`, 'success');
+            } catch (error) {
+                log(`❌ Failed to get user info: ${error.message}`, 'error');
+            }
+        }
+
+        async function testTokenRefresh() {
+            try {
+                log('Testing token refresh...');
+                const tokenInfo = tokenManager.getTokenInfo();
+                if (tokenInfo) {
+                    log(`Token expires in ${Math.round(tokenInfo.remainingMinutes)} minutes`);
+                }
+                
+                const response = await tokenManager.fetchWithAuth('/api/v1/auth/me');
+                if (response.ok) {
+                    log('✅ Token refresh test successful', 'success');
+                } else {
+                    log(`❌ Token refresh test failed: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Token refresh test error: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshToken() {
+            try {
+                log('Manually refreshing token...');
+                await tokenManager.refreshToken();
+                showTokenInfo();
+                log('✅ Token manually refreshed', 'success');
+            } catch (error) {
+                log(`❌ Manual refresh failed: ${error.message}`, 'error');
+            }
+        }
+
+        function logout() {
+            tokenManager.removeToken();
+            document.getElementById('token-section').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'block';
+            log('🔑 Logged out');
+        }
+
+        function showTokenInfo() {
+            const tokenInfo = tokenManager.getTokenInfo();
+            const infoDiv = document.getElementById('token-info');
+            
+            if (tokenInfo) {
+                const status = tokenInfo.isExpired ? 'EXPIRED' : 'VALID';
+                const remaining = Math.round(tokenInfo.remainingMinutes * 100) / 100;
+                infoDiv.innerHTML = `
+                    <strong>Status:</strong> ${status}<br>
+                    <strong>Username:</strong> ${tokenInfo.username}<br>
+                    <strong>Expires:</strong> ${tokenInfo.expiresAt.toLocaleString()}<br>
+                    <strong>Remaining:</strong> ${remaining} minutes<br>
+                    <strong>Token:</strong> ${tokenManager.getToken().substring(0, 50)}...
+                `;
+            } else {
+                infoDiv.innerHTML = 'No token information available';
+            }
+        }
+
+        function showTokenSection() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('token-section').style.display = 'block';
+            showTokenInfo();
+        }
+
+        // Auto-refresh token info every 5 seconds
+        setInterval(() => {
+            if (tokenManager.getToken()) {
+                showTokenInfo();
+            }
+        }, 5000);
+
+        // Check if already authenticated on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            log('Page loaded, checking authentication...');
+            if (tokenManager.isAuthenticated()) {
+                log('Already authenticated, showing token section', 'success');
+                showTokenSection();
+            } else {
+                log('Not authenticated, showing login form');
+            }
+        });
+    </script>
+</body>
+</html>

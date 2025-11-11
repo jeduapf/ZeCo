@@ -15,6 +15,10 @@ from config import LANG
 # Initialize logger for this module
 logger = get_i18n_logger("user_model")
 
+class GenderEnum(StrEnum):
+    MALE = "male"
+    FEMALE = "female"
+    OTHER = "other"
 
 class UserRole(StrEnum):
     """User roles in the restaurant system"""
@@ -57,7 +61,7 @@ class User(Base):
     # === Personal Information ===
     email = Column(String(255), unique=True, nullable=False, index=True)
     age = Column(Integer, nullable=False)
-    gender = Column(Boolean, nullable=True)
+    gender = Column(SQLAlchemyEnum(GenderEnum), nullable=True, default=GenderEnum.OTHER)
     
     # === Table Assignment ===
     table_id = Column(Integer, ForeignKey("tables.id"), nullable=True)

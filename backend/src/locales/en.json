@@ -7,13 +7,30 @@
   "database.value.error": "Invalid value encountered: {value} - must be {reason}",
   "database.enddate.error": "Invalid end date: {value} - must be after start date",
   
-  "auth.login.success": "User '{username}' logged in successfully",
+  "security.token.time": "User {username} has {time} minutes remaining" ,
+
+  "utils.request.info": "\n\nRequest {method} to {url} from {client};\nHeaders:\n\t{headers};\nQuery params:\n\t{query_params};\nCookies:\n\t{cookies};\nBody:\n\t{body}",
+  "utils.request.logging_failed": "Request logging failed",
+
+  "auth.registration.attempt": "Registration attempt for username '{username}' with email '{email}'",
+  "auth.registration.success": "User '{username}' registered successfully with role {role} (ID: {user_id})",
+  "auth.registration.failed": "Registration failed: {reason} already exists",
+  "auth.registration.database_error": "Database error during registration for '{username}': {error}",
+  "auth.login.attempt": "Login attempt for user '{username}' from IP {ip_address}",
+  "auth.login.success": "User '{username}' logged in successfully (Role: {role}, ID: {user_id})",
   "auth.login.failed": "Login failed for user '{username}': {reason}",
-  "auth.logout": "User '{username}' logged out",
-  "auth.token.expired": "Token expired for user '{username}'",
-  "auth.token.refreshed": "Token refreshed for user '{username}'",
+  "auth.logout": "User '{username}' logged out (ID: {user_id})",
+  "auth.password.validation_failed": "Password validation failed for '{username}': {reason}",
   "auth.password.changed": "Password changed for user '{username}'",
   "auth.unauthorized": "Unauthorized access attempt to {resource}",
+  "auth.unauthorized.access": "Unauthorized access attempt from {username}",
+  "auth.profile.accessed": "Profile accessed by user '{username}' (ID: {user_id})",
+  "auth.token.expired": "Token expired for user '{username}'",
+  "auth.token.refreshed": "Token refreshed for user '{username}'",
+  "auth.token.manual_refresh": "Manual token refresh for user '{username}' (ID: {user_id})",
+  "auth.token.invalid": "Invalid token, missing username or expiration",
+  "auth.token.verification_error": "Token verification error: {error}",
+  "auth.token.check_failed": "Token check failed: {error}",
   
   "user.created": "New user '{username}' created with role {role}",
   "user.updated": "User '{username}' profile updated",
@@ -115,7 +132,4 @@
   
   "analytics.report_generated": "Analytics report generated: {report_type} for period {period}",
   "analytics.no_data": "No data available for analytics report: {report_type} for period {period}"
-
-
-
 }

@@ -3,9 +3,9 @@ FastAPI Application Entry Point
 """
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
-from src import Base, engine, api_router, SlidingTokenMiddleware
-from config import TOKEN_REFRESH_THRESHOLD_MINUTES, API_VERSION
-
+from src import Base, engine, api_router
+from config import API_VERSION
+from datetime import timezone, datetime
 
 # Initialize FastAPI application
 app = FastAPI(
@@ -31,11 +31,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add sliding token middleware
-app.add_middleware(
-    SlidingTokenMiddleware,
-    threshold_minutes=TOKEN_REFRESH_THRESHOLD_MINUTES  # Refresh if less than configured minutes remain
-)
+# # Add sliding token middleware
+# app.add_middleware(
+#     SlidingTokenMiddleware,
+#     threshold_minutes=TOKEN_REFRESH_THRESHOLD_MINUTES  # Refresh if less than configured minutes remain
+# )
 
 # Include API v1 router
 app.include_router(api_router, prefix=f"/api/{API_VERSION}")
@@ -59,7 +59,12 @@ async def root():
         "docs": "/docs"
     }
 
-@app.get("/health", status_code=status.HTTP_200_OK)
+# === Health Check Endpoint ===
+@app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}
+    """Health check endpoint for frontend monitoring"""
+    return {
+        "status": "healthy",
+        "version": API_VERSION,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
