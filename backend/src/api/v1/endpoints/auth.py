@@ -157,10 +157,7 @@ async def login(
     along with basic user information.
     """
     ip_addr = request.client.host if request.client else "unknown"
-    print(f"\n🔐 [Backend] LOGIN ATTEMPT")
-    print(f"   Username: {form_data.username}")
-    print(f"   IP: {ip_addr}")
-    
+
     logger.info(
         "auth.login.attempt",
         language=LANG,
@@ -190,10 +187,6 @@ async def login(
 
     # Generate JWT access token
     access_token = create_access_token(data={"sub": user.username})
-    print(f"   ✓ AUTHENTICATED")
-    print(f"   User ID: {user.id}")
-    print(f"   Role: {user.role.value}")
-    print(f"   Token generated: {access_token[:20]}...")
 
     logger.info(
         "auth.login.success",
@@ -209,7 +202,6 @@ async def login(
         "expires_in": ACCESS_TOKEN_EXPIRE_MINUTES,     # Configured in config.py
         "user": UserPublicResponse.model_validate(user)
     })
-    print(f"   ✓ RESPONSE SENT\n")
     return response
 
 # ============================================================================
