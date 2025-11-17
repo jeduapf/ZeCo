@@ -2,7 +2,7 @@
 API v1 router - combines all v1 endpoints
 """
 from fastapi import APIRouter
-from src.api.v1.endpoints import auth, users, products
+from src.api.v1.endpoints import auth, users, products, admin
 
 # Create main v1 router
 api_router = APIRouter()
@@ -11,6 +11,7 @@ api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth")
 api_router.include_router(users.router, prefix="/users")
 api_router.include_router(products.router, prefix="/products")
+api_router.include_router(admin.router, prefix="/admin")
 
 # You can add more routers here as you build new features:
 # api_router.include_router(orders.router, prefix="/orders")
