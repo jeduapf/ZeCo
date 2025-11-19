@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     console.log('🔐 [Auth] Login attempt', { username })
-    
+
     try {
       // Use URLSearchParams for OAuth2PasswordRequestForm compatibility
       const body = new URLSearchParams()
@@ -103,8 +103,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
   }
 
+  /**
+   * Authenticated fetch wrapper
+   * Makes API calls with authentication automatically included
+   */
+  const authFetch = async (endpoint, options = {}) => {
+    return api.get(endpoint, options.headers)
+  }
+
   return (
-    <AuthContext.Provider value={{ token, user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ token, user, isLoading, login, logout, authFetch }}>
       {children}
     </AuthContext.Provider>
   )

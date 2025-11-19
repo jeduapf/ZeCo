@@ -9,8 +9,7 @@ export default function AdminPage() {
     let mounted = true
     async function check() {
       try {
-        const res = await authFetch('/api/v1/admin/only')
-        const data = await res.json()
+        const data = await authFetch('/admin/only')
         if (mounted) setStatus(data)
       } catch (e) {
         if (mounted) setStatus({ error: e.message })

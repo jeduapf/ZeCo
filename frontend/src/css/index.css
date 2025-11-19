@@ -1,11 +1,11 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: var(--font-primary);
   line-height: 1.5;
-  font-weight: 400;
+  font-weight: var(--font-weight-normal);
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-default);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -14,12 +14,13 @@
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary);
   text-decoration: inherit;
 }
+
 a:hover {
-  color: #535bf2;
+  color: var(--color-primary-dark);
 }
 
 body {
@@ -29,11 +30,11 @@ body {
   align-items: stretch;
   min-width: 320px;
   min-height: 100vh;
-  background-color: var(--bg, #7a2020);
+  background-color: var(--color-bg-default);
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: var(--font-size-3xl);
   line-height: 1.1;
 }
 
@@ -42,44 +43,40 @@ h1 {
   :root {
     font-size: 15px;
   }
-  h1 { font-size: 2.4em; }
+
+  h1 {
+    font-size: var(--font-size-2xl);
+  }
 }
 
 @media (max-width: 480px) {
   :root {
     font-size: 14px;
   }
-  h1 { font-size: 1.8em; }
+
+  h1 {
+    font-size: var(--font-size-xl);
+  }
 }
 
 button {
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--color-primary);
+  color: var(--color-primary-contrast);
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: var(--transition-base);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 4px auto var(--color-focus);
 }

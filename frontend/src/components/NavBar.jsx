@@ -1,8 +1,9 @@
 import "../css/NavBar.css";
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-function NavBar({translations}) {
+function NavBar({ translations }) {
   const defaultTranslations = {
     about_title: 'Home',
     menu_title: 'Menu',
@@ -11,19 +12,27 @@ function NavBar({translations}) {
   translations = translations || defaultTranslations
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const currentTitle =
     location.pathname === "/"
       ? translations.about_title
       : location.pathname === "/menu"
-      ? translations.menu_title
-      : location.pathname === "/checkout"
-      ? translations.checkout_title
-      : location.pathname === "/login"
-      ? translations.login_title
-      : location.pathname === "/admin"
-      ? translations.admin_title
-      : location.pathname.replace("/", "");
+        ? translations.menu_title
+        : location.pathname === "/checkout"
+          ? translations.checkout_title
+          : location.pathname === "/login"
+            ? translations.login_title
+            : location.pathname === "/admin"
+              ? translations.admin_title
+              : location.pathname.replace("/", "");
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+    setOpen(false);
+  };
 
   return (
     <header className="navbar">
@@ -37,10 +46,20 @@ function NavBar({translations}) {
       {/* Center Title */}
       <h1 className="navbar-title">{currentTitle}</h1>
 
-      {/* Cart on right */}
-      <Link to="/checkout" className="cart-icon">
-        🛒
-      </Link>
+      {/* Right side actions - both user and cart */}
+      <div className="navbar-actions">
+        {user && (
+          <div className="user-info" onClick={handleLogout} title={`Logout ${user.username}`}>
+            <span className="user-icon">👤</span>
+            <span className="user-name">{user.username}</span>
+          </div>
+        )}
+        <div className="cart-icon">
+          <Link to="/checkout" title="Go to checkout">
+            🛒
+          </Link>
+        </div>
+      </div>
 
       {/* Slide-down Menu */}
       <nav className={`mobile-menu ${open ? "open" : ""}`}>

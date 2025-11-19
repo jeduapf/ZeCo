@@ -22,9 +22,10 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { USER_ROLES, isAdmin, isStaff } from '../constants';
 
-const ProtectedRoute = ({ 
-  children, 
+const ProtectedRoute = ({
+  children,
   requiredRole = null,
   requiredRoles = [],
   requireStaff = false,
@@ -67,19 +68,15 @@ const ProtectedRoute = ({
 
   /**
    * Check role requirements
-   * 
-   * Three types of checks:
-   * 1. requiredRole - Must have this exact role
-   * 2. requiredRoles - Must have one of these roles
-   * 3. requireStaff - Must be any type of staff (admin/waiter/kitchen)
+   * Uses constants from constants.js (synced with backend Pydantic enums)
    */
-  
-  // Check single required role
-  if (requireAdmin && user?.role !== 'ADMIN') {
+
+  // Check single required role (case-insensitive, using helper function)
+  if (requireAdmin && !isAdmin(user?.role)) {
     return <Navigate to="/" replace />
   }
 
-  if (requiredRole && user?.role !== requiredRole) {
+  if (requiredRole && user?.role?.toLowerCase() !== requiredRole.toLowerCase()) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -87,7 +84,7 @@ const ProtectedRoute = ({
             {'Access denied'}
           </h1>
           <p className="text-gray-600 mb-4">You do not have permission to view this page.</p>
-          <button 
+          <button
             onClick={() => window.history.back()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
@@ -99,7 +96,7 @@ const ProtectedRoute = ({
   }
 
   // Check multiple possible roles
-  if (requiredRoles.length > 0 && !requiredRoles.includes(user?.role)) {
+  if (requiredRoles.length > 0 && !requiredRoles.map(r => r.toLowerCase()).includes(user?.role?.toLowerCase())) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -114,8 +111,8 @@ const ProtectedRoute = ({
     );
   }
 
-  // Check staff requirement
-  if (requireStaff && !['ADMIN','WAITER','KITCHEN'].includes(user?.role)) {
+  // Check staff requirement (case-insensitive, using helper function)
+  if (requireStaff && !isStaff(user?.role)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

@@ -1,6 +1,6 @@
 .main-content {
   flex: 1;
-  padding: 2rem;
+  padding: var(--spacing-xl);
   box-sizing: border-box;
   width: 100%;
   display: flex;
@@ -13,29 +13,29 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: var(--spacing-md);
   box-sizing: border-box;
 }
 
 .menu-page-title {
-  margin: 0 0 1rem 0;
-  font-size: 1.6rem;
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-2xl);
 }
 
 .menu-items-container {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--spacing-md);
   align-items: start;
 }
 
 @media (max-width: 600px) {
   .main-content {
-    padding: 1rem;
+    padding: var(--spacing-md);
   }
 
   .menu-page-title {
-    font-size: 1.3rem;
+    font-size: var(--font-size-xl);
   }
 }
 

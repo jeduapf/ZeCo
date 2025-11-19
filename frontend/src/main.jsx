@@ -1,11 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
+import './css/theme.css'
 import './css/index.css'
 import App from './App.jsx'
 
 // Context Providers
-import {BrowserRouter} from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext';
 // import { CartProvider } from './context/CartContext';
 
@@ -18,7 +19,7 @@ createRoot(document.getElementById('root')).render(
    * - Authentication state (user, login, logout, etc.)
    * - Shopping cart state (cart, addItem, removeItem, etc.)
    */
-  
+
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>

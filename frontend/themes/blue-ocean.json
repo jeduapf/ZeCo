@@ -1,0 +1,30 @@
+{
+    "themeName": "Blue Ocean",
+    "description": "Cool blue theme for seafood restaurants",
+    "colors": {
+        "primary": {
+            "main": "#0077b6",
+            "light": "#00b4d8",
+            "dark": "#03045e",
+            "contrast": "#ffffff"
+        },
+        "secondary": {
+            "main": "#2c3e50",
+            "light": "#34495e",
+            "dark": "#1a252f",
+            "contrast": "#ffffff"
+        },
+        "background": {
+            "default": "#ffffff",
+            "paper": "#f0f9ff",
+            "navbar": "rgba(255, 255, 255, 0.95)",
+            "overlay": "rgba(0, 0, 0, 0.5)"
+        },
+        "text": {
+            "primary": "#000000",
+            "secondary": "#666666",
+            "disabled": "#999999",
+            "hint": "#cccccc"
+        }
+    }
+}

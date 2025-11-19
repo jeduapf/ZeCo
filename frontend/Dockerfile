@@ -11,6 +11,9 @@ RUN rm -rf node_modules package-lock.json && npm install
 # Copy the rest of your app (not strictly necessary for dev if using volumes)
 COPY . .
 
+# Generate theme CSS from theme.json
+RUN node scripts/generate-theme.js
+
 EXPOSE 5173
 
 # Run dev server, but install dependencies on container start if needed
