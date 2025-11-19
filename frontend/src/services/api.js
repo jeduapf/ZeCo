@@ -78,6 +78,11 @@ const getHeaders = (customHeaders = {}) => {
 const handleError = async (response, method, url) => {
   let errorMessage = `HTTP ${response.status}`
 
+  // Check for License Expiration/Invalidity
+  if (response.status === 402) {
+    window.dispatchEvent(new CustomEvent('license-expired'));
+  }
+
   try {
     const errorData = await response.json()
     errorMessage = errorData.detail || errorData.message || errorMessage
