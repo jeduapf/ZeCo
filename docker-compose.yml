@@ -25,8 +25,8 @@ services:
   frontend:
     build:
       context: ./frontend
-    ports:
-      - '5173:5173'
+    # ports:
+    #   - '5173:5173' # Internal only, accessed via Nginx
     depends_on:
       backend:
         condition: service_healthy
@@ -38,7 +38,21 @@ services:
       - ./frontend:/app
       - /app/node_modules
       # - ./certs:/app/certs # Mount certificates for Vite HTTPS (Commented out for HTTP mode)
-    command: sh -c "npm install && npm run generate-theme && npm run dev"
+    command: sh -c "npm install && npm run generate-theme && npm run dev -- --host 0.0.0.0" 
+    networks:
+      - zeco-network
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certs:/certs:ro
+    depends_on:
+      - frontend
+      - backend
     networks:
       - zeco-network
 

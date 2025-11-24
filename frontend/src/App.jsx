@@ -17,23 +17,30 @@ import Checkout from './pages/CheckoutPage'
 import LoginPage from './pages/LoginPage'
 import AdminPage from './pages/AdminPage'
 import About from './pages/AboutPage'
+import LandingPage from './pages/LandingPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import translations from './locales/en.json'
 import './css/App.css'
 
 function App() {
+  // License validity state - controls whether the LicenseActivation modal is shown
   const [isLicenseValid, setIsLicenseValid] = React.useState(true);
 
   React.useEffect(() => {
-    // Check status on mount
+    /**
+     * Check License Status on Initial Load
+     * 
+     * This runs once when the app mounts to verify the backend license.
+     * If the license is invalid/expired, the LicenseActivation modal is shown.
+     */
     const checkLicense = async () => {
       try {
-        // We use a direct fetch or api call. 
-        // Note: api.get uses /api/v1 base, so we just need /license/status
+        // Call backend /api/v1/license/status endpoint
+        // api.get() automatically adds the /api/v1 prefix
         await import('./services/api').then(module => module.default.get('/license/status'));
         setIsLicenseValid(true);
       } catch (error) {
-        // The event listener will handle 402, but we can also set it here if we want to be sure
+        // Backend returns 402 Payment Required for invalid/expired licenses
         if (error.status === 402) {
           setIsLicenseValid(false);
         }
@@ -42,17 +49,34 @@ function App() {
 
     checkLicense();
 
+    /**
+     * Listen for License Expiration Events
+     * 
+     * The 'license-expired' event is dispatched by api.js when the backend
+     * returns a 402 response during normal API calls.
+     */
     const handleExpiration = () => setIsLicenseValid(false);
     window.addEventListener('license-expired', handleExpiration);
 
+    // Cleanup: remove event listener when component unmounts
     return () => window.removeEventListener('license-expired', handleExpiration);
   }, []);
 
+  /**
+   * Handle Successful License Activation
+   * 
+   * Called when the user successfully activates a license via the modal.
+   * Reloads the page to ensure clean state (license middleware will now pass).
+   */
   const handleActivationSuccess = () => {
     setIsLicenseValid(true);
-    // Optional: reload to ensure clean state
+    // Reload to ensure clean state and re-run middleware checks
     window.location.reload();
   };
+
+  // Determine if we're on HTTP or HTTPS
+  // This controls which routes are available
+  const isHttps = window.location.protocol === 'https:';
 
   return (
     <>
@@ -60,15 +84,42 @@ function App() {
       <NavBar translations={translations} />
       <main className="main-content">
         <Routes>
-          <Route path='/' element={<About translations={translations} />} />
+          {/* Public Routes (available on both HTTP and HTTPS) */}
+          <Route path='/' element={<LandingPage />} />
+          <Route path='/about' element={<About translations={translations} />} />
           <Route path="/menu" element={<Menu translations={translations} />} />
           <Route path="/checkout" element={<Checkout translations={translations} />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/admin" element={
-            <ProtectedRoute requireAdmin={true}>
-              <AdminPage />
-            </ProtectedRoute>
-          } />
+
+          {/* 
+            HTTPS-Only Routes (Conditional Rendering)
+            
+            These routes are only rendered when accessed via HTTPS:
+            - /login: Staff login page
+            - /admin: Admin dashboard (requires authentication via ProtectedRoute)
+            
+            WHY: Staff features require secure connections (HTTPS) because they
+            involve sensitive operations like authentication and order management.
+            
+            If users try to access these routes via HTTP, they're redirected
+            to the LandingPage where they can choose to install the certificate
+            and switch to HTTPS.
+          */}
+          {isHttps ? (
+            <>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/admin" element={
+                <ProtectedRoute requireAdmin={true}>
+                  <AdminPage />
+                </ProtectedRoute>
+              } />
+            </>
+          ) : (
+            <>
+              {/* Redirect restricted pages to Landing Page on HTTP */}
+              <Route path="/login" element={<LandingPage />} />
+              <Route path="/admin" element={<LandingPage />} />
+            </>
+          )}
         </Routes>
       </main>
     </>

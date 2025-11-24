@@ -44,7 +44,8 @@ def find_file_recursive(filename: str, start_dir: Optional[str] = None, max_leve
     return None
 
 # Load environment variables from .env file
-load_dotenv(dotenv_path=".env")
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # Database configuration
 DATABASE_URL: Final[str] = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")

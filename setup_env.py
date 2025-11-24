@@ -5,14 +5,21 @@ import sys
 import ipaddress
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
+# Import custom configuration variables
+# CERTIFICATE_LIFETIME_DAYS: How many days the certificate is valid (e.g., 3650 for 10 years)
+# CERTIFICATE_ORGANIZATION_NAME: The "Friendly Name" displayed in certificate details
+from ZeCo_config import CERTIFICATE_LIFETIME_DAYS, CERTIFICATE_ORGANIZATION_NAME
 
 try:
+    # We use the 'cryptography' library for generating secure certificates.
+    # It is a standard Python library for cryptographic recipes and primitives.
     from cryptography import x509
     from cryptography.x509.oid import NameOID
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import rsa
     from cryptography.hazmat.primitives import serialization
 except ImportError:
+    # If cryptography is not installed, we install it automatically using pip.
     print("Installing required package: cryptography...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "cryptography"])
     from cryptography import x509
@@ -22,20 +29,34 @@ except ImportError:
     from cryptography.hazmat.primitives import serialization
 
 def get_local_ip():
+    """
+    Determines the local IP address of the machine.
+    This is important so other devices on the network can connect to this server.
+    """
     try:
+        # We create a dummy socket connection to a public DNS (Google's 8.8.8.8)
+        # to figure out which network interface is used for internet access.
+        # No actual data is sent.
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
         s.close()
         return ip
     except Exception:
+        # Fallback to localhost if no network is available
         return "127.0.0.1"
 
 def generate_self_signed_cert(cert_dir: Path):
-    """Generates self-signed certificate and key using cryptography library."""
+    """
+    Generates a self-signed SSL/TLS certificate and private key.
+    
+    A self-signed certificate allows us to use HTTPS (encryption) without paying 
+    a Certificate Authority (CA). However, browsers will warn about it unless 
+    we manually "trust" it (install it) on each device.
+    """
     cert_dir.mkdir(exist_ok=True)
-    key_path = cert_dir / "key.pem"
-    cert_path = cert_dir / "cert.pem"
+    key_path = cert_dir / "key.pem"   # The private key (KEEP SECRET)
+    cert_path = cert_dir / "cert.pem" # The public certificate (Share this)
 
     if key_path.exists() and cert_path.exists():
         print(f"Certificates already exist in {cert_dir}")
@@ -46,17 +67,25 @@ def generate_self_signed_cert(cert_dir: Path):
     
     print(f"Generating self-signed certificates for {hostname} ({ip})...")
 
-    # Generate key
+    # 1. Generate Private Key
+    # We use RSA algorithm with a key size of 2048 bits (standard security).
+    # public_exponent=65537 is the industry standard default.
     key = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
     )
 
-    # Generate certificate
+    # 2. Define Certificate Subject (Who owns this cert?)
+    # Common Name (CN): Usually the hostname.
+    # Organization Name (O): The "Friendly Name" you see in certificate details.
     subject = issuer = x509.Name([
         x509.NameAttribute(NameOID.COMMON_NAME, hostname),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, CERTIFICATE_ORGANIZATION_NAME),
     ])
 
+    # 3. Define Subject Alternative Names (SANs)
+    # These are ALL the valid addresses for this certificate.
+    # If you access the site via an IP/name not in this list, you get a warning.
     alt_names = [
         x509.DNSName(hostname),
         x509.DNSName("localhost"),
@@ -64,10 +93,11 @@ def generate_self_signed_cert(cert_dir: Path):
         x509.IPAddress(ipaddress.ip_address(ip)),
     ]
 
+    # 4. Build the Certificate
     cert = x509.CertificateBuilder().subject_name(
         subject
     ).issuer_name(
-        issuer
+        issuer # Self-signed, so issuer is same as subject
     ).public_key(
         key.public_key()
     ).serial_number(
@@ -75,11 +105,14 @@ def generate_self_signed_cert(cert_dir: Path):
     ).not_valid_before(
         datetime.now(timezone.utc)
     ).not_valid_after(
-        datetime.now(timezone.utc) + timedelta(days=365)
+        # Validity period defined in config (default 10 years)
+        datetime.now(timezone.utc) + timedelta(days=CERTIFICATE_LIFETIME_DAYS)
     ).add_extension(
         x509.SubjectAlternativeName(alt_names),
         critical=False,
     ).add_extension(
+        # Key Usage: Defines what this cert can do.
+        # digital_signature & key_encipherment are needed for TLS (HTTPS).
         x509.KeyUsage(
             digital_signature=True,
             content_commitment=False,
@@ -93,14 +126,15 @@ def generate_self_signed_cert(cert_dir: Path):
         ),
         critical=True,
     ).add_extension(
+        # Extended Key Usage: Says this cert is for a Web Server and a Web Client.
         x509.ExtendedKeyUsage([
             x509.ExtendedKeyUsageOID.SERVER_AUTH,
             x509.ExtendedKeyUsageOID.CLIENT_AUTH,
         ]),
         critical=False,
-    ).sign(key, hashes.SHA256())
+    ).sign(key, hashes.SHA256()) # Sign with our own key using SHA256
 
-    # Write key
+    # 5. Save Private Key to file
     with open(key_path, "wb") as f:
         f.write(key.private_bytes(
             encoding=serialization.Encoding.PEM,
@@ -108,7 +142,7 @@ def generate_self_signed_cert(cert_dir: Path):
             encryption_algorithm=serialization.NoEncryption(),
         ))
 
-    # Write cert
+    # 6. Save Certificate to file
     with open(cert_path, "wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
     
@@ -135,6 +169,7 @@ def trust_certificate_linux(cert_path: Path):
         subprocess.run(["sudo", "cp", str(cert_path), str(target_path)], check=True)
         
         # 2. Update certificates
+        # This command rebuilds the list of trusted CA certificates on Linux
         print("Updating CA certificates...")
         subprocess.run(["sudo", "update-ca-certificates"], check=True)
         
@@ -145,10 +180,12 @@ def trust_certificate_linux(cert_path: Path):
 
 def trust_certificate(cert_path: Path):
     """Adds the certificate to the Trusted Root Store based on OS."""
-    if os.name == 'nt':
+    if os.name == 'nt': # Windows
         print("\nAttempting to add certificate to Windows Trusted Root Store...")
         print("You may see a User Account Control (UAC) prompt. Please click 'Yes'.")
         try:
+            # We use the built-in Windows 'certutil' command.
+            # -addstore "Root": Adds to the Trusted Root Certification Authorities store.
             subprocess.run(
                 ["certutil", "-addstore", "Root", str(cert_path)], 
                 check=True
@@ -181,17 +218,29 @@ def main():
     root_dir = Path(__file__).parent
     cert_dir = root_dir / "certs"
     
-    # cert_path = generate_self_signed_cert(cert_dir)
-    # if not cert_path:
-    #     cert_path = cert_dir / "cert.pem"
-        
+    # Step 1: Generate the certificate
+    cert_path = generate_self_signed_cert(cert_dir)
+    if not cert_path:
+        cert_path = cert_dir / "cert.pem"
+    
+    # Step 2: Copy cert to frontend/public
+    # This allows users to download it from http://localhost/zeco.crt
+    frontend_public_cert = root_dir / "frontend" / "public" / "zeco.crt"
+    import shutil
+    try:
+        shutil.copy(cert_path, frontend_public_cert)
+        print(f"Copied certificate to {frontend_public_cert}")
+    except Exception as e:
+        print(f"Failed to copy certificate to frontend: {e}")
+
+    # Step 3: Ensure environment files exist
     update_env_files(root_dir)
     
-    # Ask user if they want to trust the cert
-    # print("\nDo you want to trust this certificate to avoid browser warnings? (Requires Admin)")
-    # response = input("Type 'yes' to proceed, or anything else to skip: ").strip().lower()
-    # if response == 'yes':
-    #     trust_certificate(cert_path)
+    # Step 4: Ask user to trust the certificate (Windows/Linux only)
+    print("\nDo you want to trust this certificate to avoid browser warnings? (Requires Admin)")
+    response = input("Type 'yes' to proceed, or anything else to skip: ").strip().lower()
+    if response == 'yes':
+        trust_certificate(cert_path)
     
     hostname = socket.gethostname()
     ip = get_local_ip()
@@ -199,10 +248,9 @@ def main():
     print("\n" + "="*50)
     print("Setup Complete!")
     print("="*50)
-    print(f"To access your application (HTTP):")
-    print(f"Frontend: http://{hostname}:5173")
-    print(f"          http://{ip}:5173")
-    print(f"          http://localhost:5173")
+    print(f"To access your application:")
+    print(f"Guest (HTTP): http://{hostname} or http://{ip}")
+    print(f"Staff (HTTPS): https://{hostname} or https://{ip}")
     print("="*50)
 
 if __name__ == "__main__":

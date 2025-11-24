@@ -14,7 +14,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Load LicenseManager directly to avoid triggering src/__init__.py which loads DB
-spec = importlib.util.spec_from_file_location("license_manager", os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/license_manager.py')))
+spec = importlib.util.spec_from_file_location("license_manager", os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/core/license_manager.py')))
 license_manager_module = importlib.util.module_from_spec(spec)
 sys.modules["license_manager"] = license_manager_module
 spec.loader.exec_module(license_manager_module)
