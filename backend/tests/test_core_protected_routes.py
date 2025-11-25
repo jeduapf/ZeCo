@@ -93,7 +93,7 @@ class TestProtectedRoutesAccess:
         )
         
         # Should succeed with admin credentials
-       assert response.status_code in [
+        assert response.status_code in [
             status.HTTP_200_OK,
             status.HTTP_404_NOT_FOUND  # Endpoint might not exist
         ]

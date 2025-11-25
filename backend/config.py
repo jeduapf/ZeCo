@@ -64,9 +64,6 @@ if DEBUG:
 else:
     LOGLEVEL: Final[str] = os.getenv("LOGLEVEL", "INFO")  # Log base levels to be printed       
 
-
-    
-
 # Search for the files recursively from the highest level and set the paths
 # Returns None if file doesn't exist (will be created by license_manager if needed)
 LICENSE_DATA_FILE: Final[Optional[str]] = os.getenv("LICENSE_DATA_FILE") or find_file_recursive(".license_data")

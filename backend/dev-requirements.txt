@@ -12,6 +12,9 @@ uvicorn[standard]==0.24.0
 aiosqlite==0.18.0
 email-validator>=2.0.0
 python-multipart>=0.0.6
+pytest
+pytest-asyncio
+httpx
 argon2-cffi
 qrcode>=7.4.2
 Pillow>=10.0.0

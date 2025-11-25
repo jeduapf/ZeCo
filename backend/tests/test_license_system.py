@@ -12,6 +12,7 @@ import os
 
 # Add backend to path to import generate_license
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../TG')))
 
 # Load LicenseManager directly to avoid triggering src/__init__.py which loads DB
 spec = importlib.util.spec_from_file_location("license_manager", os.path.abspath(os.path.join(os.path.dirname(__file__), '../src/core/license_manager.py')))
@@ -22,7 +23,7 @@ LicenseManager = license_manager_module.LicenseManager
 from generate_license import create_license, generate_keys
 
 # Constants for testing
-TEST_DATA_FILE = ".test_license_data"
+TEST_DATA_FILE = os.path.abspath(".test_license_data")
 TEST_PUB_KEY = "test_public_key.pem"
 TEST_PRIV_KEY = "test_private_key.pem"
 

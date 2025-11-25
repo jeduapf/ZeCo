@@ -1,3 +1,17 @@
+"""
+This script is used to generate a self-signed certificate FOR HTTP/HTTPS.
+
+This is used to avoid certificate warnings in the browser.
+
+This is not related to the license manager! The liscense manager is for using the application.
+
+It does the following:
+1. Generates a self-signed certificate
+2. Copies the certificate to the frontend/public directory
+3. Updates or creates .env files if needed
+4. Asks the user to trust the certificate (Windows/Linux only)
+"""
+
 import os
 import socket
 import subprocess
@@ -8,7 +22,7 @@ from datetime import datetime, timedelta, timezone
 # Import custom configuration variables
 # CERTIFICATE_LIFETIME_DAYS: How many days the certificate is valid (e.g., 3650 for 10 years)
 # CERTIFICATE_ORGANIZATION_NAME: The "Friendly Name" displayed in certificate details
-from ZeCo_config import CERTIFICATE_LIFETIME_DAYS, CERTIFICATE_ORGANIZATION_NAME
+from https_config import CERTIFICATE_LIFETIME_DAYS, CERTIFICATE_ORGANIZATION_NAME
 
 try:
     # We use the 'cryptography' library for generating secure certificates.
@@ -60,7 +74,10 @@ def generate_self_signed_cert(cert_dir: Path):
 
     if key_path.exists() and cert_path.exists():
         print(f"Certificates already exist in {cert_dir}")
-        return cert_path
+        response = input("Do you want to regenerate them? (yes/no): ").strip().lower()
+        if response != 'yes':
+            return cert_path
+        print("Regenerating certificates...")
 
     hostname = socket.gethostname()
     ip = get_local_ip()
@@ -111,16 +128,20 @@ def generate_self_signed_cert(cert_dir: Path):
         x509.SubjectAlternativeName(alt_names),
         critical=False,
     ).add_extension(
+        x509.BasicConstraints(ca=True, path_length=None),
+        critical=True,
+    ).add_extension(
         # Key Usage: Defines what this cert can do.
         # digital_signature & key_encipherment are needed for TLS (HTTPS).
+        # key_cert_sign is REQUIRED for it to be a valid CA (which it is, as a self-signed root).
         x509.KeyUsage(
             digital_signature=True,
             content_commitment=False,
             key_encipherment=True,
             data_encipherment=False,
             key_agreement=False,
-            key_cert_sign=False,
-            crl_sign=False,
+            key_cert_sign=True,
+            crl_sign=True,
             encipher_only=False,
             decipher_only=False,
         ),
